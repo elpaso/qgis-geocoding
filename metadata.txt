@@ -1,0 +1,17 @@
+[general]
+name:GeoCoding
+description:GeoCoding and reverse GeoCoding using Google web services
+
+version:2.0
+qgisMinimumVersion:1.6
+experimental:False
+homepage:http://www.itopen.it/2009/06/05/geocoding-qgis-plugins-released/
+repository:https://github.com/elpaso/qgis-geocoding
+tracker:https://github.com/elpaso/qgis-geocoding/issues
+
+
+changelog:
+    multiple address support
+
+icon:geocode_icon.png
+

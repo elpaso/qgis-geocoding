@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="/plugins/GeoCoding" >
+    <file>geocode_icon.png</file>
+    <file>reverse_icon.png</file>
+    <file>about_icon.png</file>
+    <file>settings_icon.png</file>
+  </qresource>
+</RCC>
