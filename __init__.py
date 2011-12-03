@@ -25,7 +25,7 @@ def description():
     return "GeoCoding and reverse GeoCoding using Google web services"
 
 def version():
-    return "2.0"
+    return "2.1"
 
 def qgisMinimumVersion():
     return "1.6"

@@ -212,7 +212,7 @@ class GeoCoding:
                 places[place] = point
 
             if len(places) == 1:
-                process_point(place, point)
+                self.process_point(place, point)
             else:
                 all_str = QCoreApplication.translate('GeoCoding', 'All')
                 place_dlg = PlaceSelectionDialog()
