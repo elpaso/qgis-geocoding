@@ -263,14 +263,10 @@ class GeoCoding:
         qDebug('Saving point ' + str(point[1])  + ' ' + str(point[0]))
         # create and add the point layer if not exists or not set
         if not QgsMapLayerRegistry.instance().mapLayer(self.layerid) :
-            # create layer with same CRS as project
+            # create layer with same CRS as map canvas
             self.layer = QgsVectorLayer("Point", "GeoCoding Plugin Results", "memory")
             self.provider = self.layer.dataProvider()
-            p = QgsProject.instance()
-            (proj4string,ok) = p.readEntry("SpatialRefSys","ProjectCRSProj4String")
-            crs = QgsCoordinateReferenceSystem()
-            crs.createFromProj4(proj4string)
-            self.layer.setCrs(crs)
+            self.layer.setCrs(self.canvas.mapRenderer().destinationCrs())
 
             # add fields
             self.provider.addAttributes( [QgsField("address", QVariant.String)] )
@@ -308,16 +304,16 @@ class GeoCoding:
     def check_settings (self) :
         p = QgsProject.instance()
         error = ''
-        (proj4string,ok) = p.readEntry("SpatialRefSys","ProjectCRSProj4String")
-        if not ok :
-            error += unicode(QCoreApplication.translate('GeoCoding', "Project projection is not set: GeoCoding needs explicit projection set. Please set project CRS."))
+        #(proj4string,ok) = p.readEntry("SpatialRefSys","ProjectCRSProj4String")
+        #if not ok :
+        #    error += unicode(QCoreApplication.translate('GeoCoding', "Project projection is not set: GeoCoding needs explicit projection set. Please set project CRS."))
         if not len(self.get_config('GoogleAPIKey').toString()) :
             error += unicode(QCoreApplication.translate('GeoCoding', "Google API Key is not set, please check plugin settings."))
 
         try:
             import simplejson
         except ImportError, e:
-            error += QCoreApplication.translate('GeoCoding', "'simplejson' module is required. Please install simplejson with 'easy_install simplejson'")
+            error += QCoreApplication.translate('GeoCoding', "'simplejson' module is required. Please install simplejson with 'easy_install simplejson' or 'pip install simplejson'")
 
         return error
 
