@@ -85,11 +85,11 @@ class Google(Geocoder):
             (lat, lng, _) = coord
         else:
             (lat, lng) = coord
-        params = {'q': self.format_string % lat+','+self.format_string % lng,
-		  'output': self.output_format.lower()
-		  }
+            params = {'q': self.format_string % lat+','+self.format_string % lng,
+                'output': self.output_format.lower()
+            }
 
-	if self.api_key:
+        if self.api_key:
             # An API key is only required for the HTTP geocoder.
             params['key'] = self.api_key
 

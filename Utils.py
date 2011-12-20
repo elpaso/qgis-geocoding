@@ -2,11 +2,11 @@
 ***************************************************************************
 Name			 	 : Geocoding
 Description          : Geocoding and reverse Geocoding using Google
-Date                 : 28/May/09 
+Date                 : 28/May/09
 copyright            : (C) 2009 by ItOpen
 email                : info@itopen.it
  ***************************************************************************/
- 
+
  /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -41,7 +41,7 @@ def pointToWGS84(point):
     if not ok:
         return point
     t=QgsCoordinateReferenceSystem()
-    t.createFromEpsg(4326)
+    t.createFromSrid(4326)
     f=QgsCoordinateReferenceSystem()
     f.createFromProj4(proj4string)
     transformer = QgsCoordinateTransform(f,t)
@@ -54,7 +54,7 @@ def pointFromWGS84(point):
     if not ok:
         return point
     f=QgsCoordinateReferenceSystem()
-    f.createFromEpsg(4326)
+    f.createFromSrid(4326)
     t=QgsCoordinateReferenceSystem()
     t.createFromProj4(proj4string)
     transformer = QgsCoordinateTransform(f,t)
