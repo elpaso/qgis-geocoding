@@ -215,8 +215,12 @@ class GeoCoding:
                         for place in places:
                             self.process_point(place, places[place])
                     else:
-                        point = places[str(place_dlg.placesComboBox.currentText())]
-                        self.process_point(str(place_dlg.placesComboBox.currentText()), point)
+                        #import pdb
+                        # These lines allow you to set a breakpoint in the app
+                        #pyqtRemoveInputHook()
+                        #pdb.set_trace()
+                        point = places[unicode(place_dlg.placesComboBox.currentText())]
+                        self.process_point(place_dlg.placesComboBox.currentText(), point)
             return
 
 
