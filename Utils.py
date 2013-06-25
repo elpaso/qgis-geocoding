@@ -3,7 +3,7 @@
 Name			 	 : Geocoding
 Description          : Geocoding and reverse Geocoding using Google
 Date                 : 28/May/09
-copyright            : (C) 2009 by ItOpen
+copyright            : (C) 2009-2013 by ItOpen
 email                : info@itopen.it
  ***************************************************************************/
 
@@ -35,28 +35,23 @@ class ClickTool(QgsMapTool):
         return None
 
 
-def pointToWGS84(point):
-    p = QgsProject.instance()
-    (proj4string,ok) = p.readEntry("SpatialRefSys","ProjectCRSProj4String")
-    if not ok:
-        return point
+def pointToWGS84(point, crs):
+    """
+    crs is the renderer crs
+    """
     t=QgsCoordinateReferenceSystem()
     t.createFromSrid(4326)
-    f=QgsCoordinateReferenceSystem()
-    f.createFromProj4(proj4string)
+    f=crs #QgsCoordinateReferenceSystem()
+    #f.createFromProj4(proj4string)
     transformer = QgsCoordinateTransform(f,t)
     pt = transformer.transform(point)
     return pt
 
-def pointFromWGS84(point):
-    p = QgsProject.instance()
-    (proj4string,ok) = p.readEntry("SpatialRefSys","ProjectCRSProj4String")
-    if not ok:
-        return point
+def pointFromWGS84(point, crs):
     f=QgsCoordinateReferenceSystem()
     f.createFromSrid(4326)
-    t=QgsCoordinateReferenceSystem()
-    t.createFromProj4(proj4string)
+    t=crs # QgsCoordinateReferenceSystem()
+    #t.createFromProj4(proj4string)
     transformer = QgsCoordinateTransform(f,t)
     pt = transformer.transform(point)
     return pt

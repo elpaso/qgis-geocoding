@@ -2,8 +2,8 @@
 ***************************************************************************
 Name			 	 : Geocoding
 Description          : Geocoding and reverse Geocoding using Google
-Date                 : 28/May/09
-copyright            : (C) 2009 by ItOpen
+Date                 : 2/May/13
+copyright            : (C) 2013 by ItOpen
 email                : info@itopen.it
  ***************************************************************************/
 
@@ -30,11 +30,9 @@ class ConfigDialog(QDialog, Ui_Config ):
         ##self.ui.setupUi(self)
         self.setupUi(self)
 
-        google_api_key = caller.get_config('GoogleAPIKey').toString()
         # stupid qvariant return a tuple...
         zoom_scale = caller.get_config('ZoomScale').toInt()[0]
 
-        self.GoogleAPIKey.setText(google_api_key)
         self.ZoomScale.setValue(zoom_scale)
 
 

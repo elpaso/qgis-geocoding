@@ -25,7 +25,7 @@ def description():
     return "GeoCoding and reverse GeoCoding using Google web services"
 
 def version():
-    return "2.3"
+    return "2.5"
 
 def qgisMinimumVersion():
     return "1.6"
@@ -35,6 +35,11 @@ def classFactory(iface):
     from GeoCoding import GeoCoding
     return GeoCoding(iface)
 
+def author():
+    return "Alessandro Pasotti"
+
+def email():
+    return "apasotti@gmail.com"
 
 def experimental():
     return False

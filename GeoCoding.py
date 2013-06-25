@@ -2,9 +2,9 @@
 """
 /***************************************************************************
 Name                 : Geocoding
-Description          : Geocoding and reverse Geocoding using Google
-Date                 : 28/May/09
-copyright            : (C) 2009-2010 by ItOpen
+Description          : Geocoding and reverse Geocoding using Web Services
+Date                 : 25/Jun/2013
+copyright            : (C) 2009-2013 by ItOpen
 email                : info@itopen.it
  ***************************************************************************/
 
@@ -23,6 +23,8 @@ from PyQt4.QtGui import *
 from qgis.core import *
 
 import sys, os
+from urllib2 import URLError
+
 
 # Make sure geopy is imported from current path
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -67,8 +69,6 @@ class GeoCoding:
         self.iface.addPluginToMenu("GeoCode", self.reverseAction)
         self.iface.addPluginToMenu("GeoCode", self.configAction)
         self.iface.addPluginToMenu("GeoCode", self.aboutAction)
-
-
         # read config
         self.config = QSettings('ItOpen', 'GeoCoding');
 
@@ -84,7 +84,7 @@ class GeoCoding:
         dlg = ConfigDialog(self)
         geocoders = {
                 'Nominatim (Openstreetmap)' : 'Nominatim',
-                'Google' : 'Google',
+                'Google' : 'GoogleV3',
             }
         # Get current index
         try:
@@ -99,13 +99,12 @@ class GeoCoding:
         # See if OK was pressed
         if result == 1:
             # save settings
-            self.set_config('GoogleAPIKey', dlg.GoogleAPIKey.text())
             self.set_config('GeocoderClass', geocoders[str(dlg.geocoderComboBox.currentText())])
             self.set_config('ZoomScale',  dlg.ZoomScale.text())
             self.store_config()
 
     def about(self):
-        infoString = QString(QCoreApplication.translate('GeoCoding', "Python GeoCoding Plugin<br />This plugin provides GeoCoding functions using webservices.<br />Author: Dr. Alessandro Pasotti (aka: elpaso)<br />Mail: <a href=\"mailto:info@itopen.it\">info@itopen.it</a><br />Web: <a href=\"http://www.itopen.it\">www.itopen.it</a>\n"))
+        infoString = QString(QCoreApplication.translate('GeoCoding', "Python GeoCoding Plugin<br />This plugin provides GeoCoding functions using webservices.<br />Author:  Alessandro Pasotti (aka: elpaso)<br />Mail: <a href=\"mailto:info@itopen.it\">info@itopen.it</a><br />Web: <a href=\"http://www.itopen.it\">www.itopen.it</a><br />" + "<b>Do yo like this plugin? Please consider <a href=\"https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TJHLD5DY4LAFQ\">donating</a></b>."))
         QMessageBox.information(self.iface.mainWindow(), "About GeoCoding",infoString)
 
     # return a config parameter
@@ -148,6 +147,13 @@ class GeoCoding:
 
    # change settings
     def reverse_action(self, point):
+        """
+        Performs the reverse action calling
+        the geopy reverse method
+
+        TODO: clear the map tool on error
+        (still haven't find how to do it)
+        """
         try:
             geocoder = self.get_geocoder_instance()
         except ImportError, e:
@@ -155,18 +161,24 @@ class GeoCoding:
             return
 
         if 'reverse' not in dir(geocoder) :
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "This Python module 'geopy' version does not support reverse geocoding. You should install the experimental version, more info at <a href=\"http://code.google.com/p/geopy/wiki/ReverseGeocoding\">ReverseGeocoding</a>"))
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "This Python module 'geopy' version does not support reverse geocoding. You should install a newer version, more info at <a href=\"http://code.google.com/p/geopy/wiki/ReverseGeocoding\">ReverseGeocoding</a>"))
             return
 
         try:
             # reverse lat/lon
-            pt = pointToWGS84(point)
-            address = geocoder.reverse((pt[1],pt[0]));
+            qDebug('Reverse clicked point ' + str(point[1])  + ' ' + str(point[0]))
+            pt = pointToWGS84(point, self.iface.mapCanvas().mapRenderer().destinationCrs())
+            qDebug('Reverse transformed point ' + str(pt[1])  + ' ' + str(pt[0]))
+            address = geocoder.reverse((pt[1],pt[0]), exactly_one=True);
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding"),  unicode(QCoreApplication.translate('GeoCoding', "Reverse geocoding found the following address:<br /><strong>%s</strong>")) %  unicode(address[0]))
             # save point
             self.save_point(point, unicode(address[0]))
-        except (IndexError,  ValueError),  e:
-             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>No location found.</strong><br />Please check your CRS, you have clicked on<br />(Lat Lon) %(lat)f %(lon)f<br />Server response: %(error_message)s")) % {'lat' :  pt[1], 'lon' : pt[0], 'error_message' : e})
+        except (IndexError,  ValueError, TypeError),  e:
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>No location found.</strong><br />Please check your CRS, you have clicked on<br />(Lat Lon) %(lat)f %(lon)f<br />Server response: %(error_message)s")) % {'lat' :  pt[1], 'lon' : pt[0], 'error_message' : e})
+        except URLError, e:
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>GeoCoding server is unreachable</strong>.<br />Please check your network connection.")))
+        except Exception, e:
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>Unhandled exception</strong>.<br />%s" % e)))
         return
 
 
@@ -197,6 +209,10 @@ class GeoCoding:
                 QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "There was an error with the geocoding service:<br /><strong>%1</strong>").arg(unicode(e)))
                 return
 
+            if not result:
+                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Not found"), QCoreApplication.translate('GeoCoding', "The geocoder service returned no data for the searched address: <strong>%1</strong>.").arg(dlg.address.text()))
+                return
+
             places = {}
             for place, point in result:
                 places[place] = point
@@ -215,10 +231,6 @@ class GeoCoding:
                         for place in places:
                             self.process_point(place, places[place])
                     else:
-                        #import pdb
-                        # These lines allow you to set a breakpoint in the app
-                        #pyqtRemoveInputHook()
-                        #pdb.set_trace()
                         point = places[unicode(place_dlg.placesComboBox.currentText())]
                         self.process_point(place_dlg.placesComboBox.currentText(), point)
             return
@@ -235,8 +247,6 @@ class GeoCoding:
         if not geocoder_class:
             geocoder_class  ='Nominatim'
         geocoder = getattr(geocoders, geocoder_class)
-        if 'Google' == geocoder_class:
-            return geocoder(api_key=self.get_config('GoogleAPIKey').toString())
         return geocoder()
 
 
@@ -246,7 +256,7 @@ class GeoCoding:
         """
         # lon lat and transform
         point = QgsPoint(point[1], point[0])
-        point = pointFromWGS84(point)
+        point = pointFromWGS84(point, self.iface.mapCanvas().mapRenderer().destinationCrs())
         x = point[0]
         y = point[1]
         # stupid qvariant return a tuple
@@ -280,7 +290,7 @@ class GeoCoding:
             self.layer.setCrs(self.canvas.mapRenderer().destinationCrs())
 
             # add fields
-            self.provider.addAttributes( [QgsField("address", QVariant.String)] )
+            self.provider.addAttributes( [QgsField(QString("address"), QVariant.String)] )
 
             # Labels on
             label = self.layer.label()
@@ -297,8 +307,12 @@ class GeoCoding:
         # add a feature
         fet = QgsFeature()
         fet.setGeometry(QgsGeometry.fromPoint(point))
-        fet.setAttributeMap( { 0 : QVariant(address) } )
-        self.provider.addFeatures( [ fet ] )
+        try: # QGIS < 1.9
+            fet.setAttributeMap({0 : QVariant(address)})
+        except: # QGIS >= 1.9
+            fet.setAttribute(0, QVariant(address))
+
+        self.provider.addFeatures([ fet ])
 
         # update layer's extent when new features have been added
         # because change of extent in provider is not propagated to the layer
@@ -313,8 +327,8 @@ class GeoCoding:
         p = QgsProject.instance()
         error = ''
 
-        if 'Google' == self.get_config('GeocoderClass').toString() and not len(self.get_config('GoogleAPIKey').toString()) :
-            error += unicode(QCoreApplication.translate('GeoCoding', "Google API Key is not set, please check plugin settings."))
+        if not self.iface.mapCanvas().hasCrsTransformEnabled() and self.iface.mapCanvas().mapRenderer().destinationCrs().authid() != 'EPSG:4326':
+            error = QCoreApplication.translate('GeoCoding', "On-the-fly reprojection must be enabled if the destination CRS is not EPSG:4326. Please enable on-the-fly reprojection.")
 
         try:
             import simplejson

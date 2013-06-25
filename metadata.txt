@@ -2,7 +2,10 @@
 name:GeoCoding
 description:GeoCoding and reverse GeoCoding using Google web services
 
-version:2.3
+email:apasotti@gmail.com
+author:Alessandro Pasotti
+
+version:2.5
 qgisMinimumVersion:1.6
 experimental:False
 homepage:http://www.itopen.it/2009/06/05/geocoding-qgis-plugins-released/
@@ -11,7 +14,10 @@ tracker:https://github.com/elpaso/qgis-geocoding/issues
 
 
 changelog:
-    Nominatim (openstreetmap) webservice support
+    v 2.5:
+        Googlev3 support, updated geopy
+    v 2.4:
+        Nominatim (openstreetmap) webservice support
 
 icon:geocode_icon.png
 

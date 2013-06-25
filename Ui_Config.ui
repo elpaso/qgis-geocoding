@@ -37,31 +37,7 @@
      <widget class="QComboBox" name="geocoderComboBox"/>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Google API KEY</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>&lt;a href=&quot;http://code.google.com/apis/maps/signup.html&quot;&gt;Get a Google API Key&lt;/a&gt;</string>
-        </property>
-        <property name="textFormat">
-         <enum>Qt::AutoText</enum>
-        </property>
-        <property name="openExternalLinks">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="GoogleAPIKey"/>
+     <layout class="QHBoxLayout" name="horizontalLayout"/>
     </item>
     <item>
      <widget class="QLabel" name="label_3">
