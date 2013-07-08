@@ -54,7 +54,7 @@ class Nominatim(Geocoder):
         page = urlopen(url)
         return self.parse_json(page, exactly_one)
 
-    def reverse(self, coord, exactly_one=True):
+    def reverse(self, coord, exactly_one=False):
         if isinstance(coord, Point):
             (lat, lng, _) = coord
         else:
@@ -67,6 +67,12 @@ class Nominatim(Geocoder):
           }
 
         url = self.reverse_url % urlencode(params)
+        ## Use pdb for debugging
+        #import pdb
+        #from PyQt4.QtCore import *
+        ## These lines allow you to set a breakpoint in the app
+        #pyqtRemoveInputHook()
+        #pdb.set_trace()
         return self.geocode_url(url, exactly_one, reverse=True)
 
     def parse_json(self, page, exactly_one):
@@ -86,7 +92,7 @@ class Nominatim(Geocoder):
             raise ValueError("Didn't find exactly one code! " \
                              "(Found %d.)" % len(places))
 
-        def parse_code(place):
+        def parse_place(place):
             latitude = place.get('lat', None)
             longitude = place.get('lon', None)
             if latitude and longitude:
@@ -96,10 +102,9 @@ class Nominatim(Geocoder):
                 return None
 
             placename = place.get('display_name')
-
             return (placename, (latitude, longitude))
 
         if exactly_one:
-            return parse_code(places[0])
+            return parse_place(places[0])
         else:
-            return [parse_code(place) for place in places]
+            return [parse_place(place) for place in places]

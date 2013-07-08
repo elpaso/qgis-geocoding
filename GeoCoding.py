@@ -169,10 +169,11 @@ class GeoCoding:
             qDebug('Reverse clicked point ' + str(point[1])  + ' ' + str(point[0]))
             pt = pointToWGS84(point, self.iface.mapCanvas().mapRenderer().destinationCrs())
             qDebug('Reverse transformed point ' + str(pt[1])  + ' ' + str(pt[0]))
-            address = geocoder.reverse((pt[1],pt[0]), exactly_one=True);
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding"),  unicode(QCoreApplication.translate('GeoCoding', "Reverse geocoding found the following address:<br /><strong>%s</strong>")) %  unicode(address[0]))
+            # Set exactly_one to False even if only the first is handled
+            address = geocoder.reverse((pt[1],pt[0]), exactly_one=False);
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding"),  unicode(QCoreApplication.translate('GeoCoding', "Reverse geocoding found the following address:<br /><strong>%s</strong>")) %  unicode(address[0][0]))
             # save point
-            self.save_point(point, unicode(address[0]))
+            self.save_point(point, unicode(address[0][0]))
         except (IndexError,  ValueError, TypeError),  e:
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>No location found.</strong><br />Please check your CRS, you have clicked on<br />(Lat Lon) %(lat)f %(lon)f<br />Server response: %(error_message)s")) % {'lat' :  pt[1], 'lon' : pt[0], 'error_message' : e})
         except URLError, e:
