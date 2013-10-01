@@ -31,8 +31,13 @@ class ConfigDialog(QDialog, Ui_Config ):
         self.setupUi(self)
 
         # stupid qvariant return a tuple...
-        zoom_scale = caller.get_config('ZoomScale').toInt()[0]
+        zoom_scale = caller.get_config('ZoomScale', 0)
+        # Use pdb for debugging
+        #import pdb
+        ## These lines allow you to set a breakpoint in the app
+        #pyqtRemoveInputHook()
+        #pdb.set_trace()
 
-        self.ZoomScale.setValue(zoom_scale)
+        self.ZoomScale.setValue(int(zoom_scale))
 
 
