@@ -207,7 +207,7 @@ class GeoCoding:
             try:
                 result = geocoder.geocode(unicode(dlg.address.text()).encode('utf-8'), exactly_one=False)
             except Exception, e:
-                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "There was an error with the geocoding service:<br><strong>%1</strong>").arg(unicode(e)))
+                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "There was an error with the geocoding service:<br><strong>%s</strong>" % e))
                 return
 
             if not result:
