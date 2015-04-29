@@ -342,11 +342,6 @@ class GeoCoding:
 
         if not self.iface.mapCanvas().hasCrsTransformEnabled() and self.iface.mapCanvas().mapRenderer().destinationCrs().authid() != 'EPSG:4326':
             error = QCoreApplication.translate('GeoCoding', "On-the-fly reprojection must be enabled if the destination CRS is not EPSG:4326. Please enable on-the-fly reprojection.")
-        try:
-            import simplejson
-        except ImportError, e:
-            error += QCoreApplication.translate('GeoCoding', "'simplejson' module is required. Please install simplejson with 'easy_install simplejson' or 'pip install simplejson'")
-
 
         return error
 

@@ -28,7 +28,7 @@ clean:
 	rm -f Ui_GeoCoding.py Ui_Config.py  Ui_GeoCoding.py  Ui_PlaceSelection.py  Ui_GeoCoding.py resources.py
 
 package:
-	cd .. && find GeoCoding/  -print|grep -v Make | grep -v zip | grep -v .git | zip GeoCoding.zip -@
+	cd .. && find GeoCoding/  -print|grep -v Make | grep -v zip | grep -v .git | grep -v .pyc| zip GeoCoding.zip -@
 
 localrepo:
 	cp ../GeoCoding.zip ~/public_html/qgis/GeoCoding.zip

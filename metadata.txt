@@ -5,7 +5,7 @@ description:GeoCoding and reverse GeoCoding using Nominatim and Google web servi
 email:apasotti@gmail.com
 author:Alessandro Pasotti
 
-version:2.7
+version:2.9
 qgisMinimumVersion:2.0
 
 experimental:False
@@ -15,6 +15,10 @@ tracker:https://github.com/elpaso/qgis-geocoding/issues
 
 
 changelog:
+    Version 2.9:
+        Fix removed simplejson dep, use latest geopy
+    Version 2.8:
+        Fix #10 error when goecoding not found with Google
     Version 2.7:
         QGIS 2.0 API update
     Version 2.6:

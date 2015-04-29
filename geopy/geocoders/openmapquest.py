@@ -1,69 +1,123 @@
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        from django.utils import simplejson as json
+"""
+:class:`.OpenMapQuest` geocoder.
+"""
 
-from urllib import urlencode
-from urllib2 import urlopen
+from geopy.compat import urlencode
+from geopy.geocoders.base import (
+    Geocoder,
+    DEFAULT_FORMAT_STRING,
+    DEFAULT_TIMEOUT,
+    DEFAULT_SCHEME
+)
+from geopy.location import Location
+from geopy.util import logger
 
-from geopy.geocoders.base import Geocoder
-from geopy.util import logger, decode_page, join_filter
 
-class OpenMapQuest(Geocoder):
-    """Geocoder using the MapQuest Open Platform Web Services."""
-    
-    def __init__(self, api_key='', format_string='%s'):
-        """Initialize an Open MapQuest geocoder with location-specific
-        address information, no API Key is needed by the Nominatim based
-        platform.
-        
-        ``format_string`` is a string containing '%s' where the string to
-        geocode should be interpolated before querying the geocoder.
-        For example: '%s, Mountain View, CA'. The default is just '%s'.
+__all__ = ("OpenMapQuest", )
+
+
+class OpenMapQuest(Geocoder): # pylint: disable=W0223
+    """
+    Geocoder using MapQuest Open Platform Web Services. Documentation at:
+        http://developer.mapquest.com/web/products/open/geocoding-service
+    """
+
+    def __init__(
+            self,
+            api_key=None,
+            format_string=DEFAULT_FORMAT_STRING,
+            scheme=DEFAULT_SCHEME,
+            timeout=DEFAULT_TIMEOUT,
+            proxies=None,
+        ):  # pylint: disable=R0913
         """
-        
-        self.api_key = api_key
-        self.format_string = format_string
-        self.url = "http://open.mapquestapi.com/nominatim/v1/search?format=json&%s"
-    
-    def geocode(self, string, exactly_one=True):
-        if isinstance(string, unicode):
-            string = string.encode('utf-8')
-        params = {'q': self.format_string % string}
-        url = self.url % urlencode(params)
-        
-        logger.debug("Fetching %s..." % url)
-        page = urlopen(url)
-        
-        return self.parse_json(page, exactly_one)
-    
-    def parse_json(self, page, exactly_one=True):
-        """Parse display name, latitude, and longitude from an JSON response."""
-        if not isinstance(page, basestring):
-            page = decode_page(page)
-        resources = json.loads(page)
-        
-        if exactly_one and len(resources) != 1:
-            from warnings import warn
-            warn("Didn't find exactly one resource!" + \
-                "(Found %d.), use exactly_one=False\n" % len(resources)
-            )
-            
-        def parse_resource(resource):
-            location = resource['display_name']
-            
-            latitude = resource['lat'] or None
-            longitude = resource['lon'] or None
-            if latitude and longitude:
-                latitude = float(latitude)
-                longitude = float(longitude)
-            
-            return (location, (latitude, longitude))
-        
+        Initialize an Open MapQuest geocoder with location-specific
+        address information. No API Key is needed by the Nominatim based
+        platform.
+
+        :param string format_string: String containing '%s' where
+            the string to geocode should be interpolated before querying
+            the geocoder. For example: '%s, Mountain View, CA'. The default
+            is just '%s'.
+
+        :param string scheme: Use 'https' or 'http' as the API URL's scheme.
+            Default is https. Note that SSL connections' certificates are not
+            verified.
+
+            .. versionadded:: 0.97
+
+        :param int timeout: Time, in seconds, to wait for the geocoding service
+            to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
+            exception.
+
+            .. versionadded:: 0.97
+
+        :param dict proxies: If specified, routes this geocoder's requests
+            through the specified proxy. E.g., {"https": "192.0.2.0"}. For
+            more information, see documentation on
+            :class:`urllib2.ProxyHandler`.
+
+            .. versionadded:: 0.96
+        """
+        super(OpenMapQuest, self).__init__(
+            format_string, scheme, timeout, proxies
+        )
+        self.api_key = api_key or ''
+        self.api = "%s://open.mapquestapi.com/nominatim/v1/search" \
+                    "?format=json" % self.scheme
+
+    def geocode(self, query, exactly_one=True, timeout=None): # pylint: disable=W0221
+        """
+        Geocode a location query.
+
+        :param string query: The address or query you wish to geocode.
+
+        :param bool exactly_one: Return one result or a list of results, if
+            available.
+
+        :param int timeout: Time, in seconds, to wait for the geocoding service
+            to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
+            exception. Set this only if you wish to override, on this call
+            only, the value set during the geocoder's initialization.
+
+            .. versionadded:: 0.97
+        """
+        params = {
+            'q': self.format_string % query
+        }
         if exactly_one:
-            return parse_resource(resources[0])
+            params['maxResults'] = 1
+        url = "&".join((self.api, urlencode(params)))
+
+        logger.debug("%s.geocode: %s", self.__class__.__name__, url)
+        return self._parse_json(
+            self._call_geocoder(url, timeout=timeout),
+            exactly_one
+        )
+
+    @classmethod
+    def _parse_json(cls, resources, exactly_one=True):
+        """
+        Parse display name, latitude, and longitude from an JSON response.
+        """
+        if not len(resources): # pragma: no cover
+            return None
+        if exactly_one:
+            return cls.parse_resource(resources[0])
         else:
-            return [parse_resource(resource) for resource in resources]
+            return [cls.parse_resource(resource) for resource in resources]
+
+    @classmethod
+    def parse_resource(cls, resource):
+        """
+        Return location and coordinates tuple from dict.
+        """
+        location = resource['display_name']
+
+        latitude = resource['lat'] or None
+        longitude = resource['lon'] or None
+        if latitude and longitude:
+            latitude = float(latitude)
+            longitude = float(longitude)
+
+        return Location(location, (latitude, longitude), resource)

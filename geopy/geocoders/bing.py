@@ -1,88 +1,219 @@
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        from django.utils import simplejson as json
+"""
+:class:`.Bing` geocoder.
+"""
 
-from urllib import urlencode
-from urllib2 import urlopen
+from geopy.compat import urlencode
+from geopy.geocoders.base import Geocoder, DEFAULT_FORMAT_STRING, \
+    DEFAULT_TIMEOUT, DEFAULT_SCHEME
+from geopy.location import Location
+from geopy.exc import (
+    GeocoderAuthenticationFailure,
+    GeocoderQuotaExceeded,
+    GeocoderInsufficientPrivileges,
+    GeocoderUnavailable,
+    GeocoderServiceError,
+)
+from geopy.util import logger, join_filter
 
-from geopy.geocoders.base import Geocoder
-from geopy.util import logger, decode_page, join_filter
+
+__all__ = ("Bing", )
+
 
 class Bing(Geocoder):
-    """Geocoder using the Bing Maps API."""
+    """
+    Geocoder using the Bing Maps Locations API. Documentation at:
+        https://msdn.microsoft.com/en-us/library/ff701715.aspx
+    """
 
-    def __init__(self, api_key, format_string='%s', output_format=None):
+    def __init__(
+            self,
+            api_key,
+            format_string=DEFAULT_FORMAT_STRING,
+            scheme=DEFAULT_SCHEME,
+            timeout=DEFAULT_TIMEOUT,
+            proxies=None,
+        ):  # pylint: disable=R0913
         """Initialize a customized Bing geocoder with location-specific
         address information and your Bing Maps API key.
 
-        ``api_key`` should be a valid Bing Maps API key.
+        :param string api_key: Should be a valid Bing Maps API key.
 
-        ``format_string`` is a string containing '%s' where the string to
-        geocode should be interpolated before querying the geocoder.
-        For example: '%s, Mountain View, CA'. The default is just '%s'.
+        :param string format_string: String containing '%s' where the
+            string to geocode should be interpolated before querying the
+            geocoder. For example: '%s, Mountain View, CA'. The default
+            is just '%s'.
 
-        ``output_format`` (DEPRECATED) is ignored
+        :param string scheme: Use 'https' or 'http' as the API URL's scheme.
+            Default is https. Note that SSL connections' certificates are not
+            verified.
+
+            .. versionadded:: 0.97
+
+        :param int timeout: Time, in seconds, to wait for the geocoding service
+            to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
+            exception.
+
+            .. versionadded:: 0.97
+
+        :param dict proxies: If specified, routes this geocoder's requests
+            through the specified proxy. E.g., {"https": "192.0.2.0"}. For
+            more information, see documentation on
+            :class:`urllib2.ProxyHandler`.
+
+            .. versionadded:: 0.96
         """
-        if output_format != None:
-            from warnings import warn
-            warn('geopy.geocoders.bing.Bing: The `output_format` parameter is deprecated '+
-                 'and ignored.', DeprecationWarning)
-        
+        super(Bing, self).__init__(format_string, scheme, timeout, proxies)
         self.api_key = api_key
-        self.format_string = format_string
-        self.url = "http://dev.virtualearth.net/REST/v1/Locations?%s"
+        self.api = "%s://dev.virtualearth.net/REST/v1/Locations" % self.scheme
 
-    def geocode(self, string, exactly_one=True):
-        if isinstance(string, unicode):
-            string = string.encode('utf-8')
-        params = {'query': self.format_string % string,
-                  'key': self.api_key
-                  }
-        url = self.url % urlencode(params)
-        return self.geocode_url(url, exactly_one)
+    def geocode(
+            self,
+            query,
+            exactly_one=True,
+            user_location=None,
+            timeout=None,
+            culture=None,
+            include_neighborhood=None,
+            include_country_code=False
+        ):  # pylint: disable=W0221
+        """
+        Geocode an address.
 
-    def geocode_url(self, url, exactly_one=True):
-        logger.debug("Fetching %s..." % url)
-        page = urlopen(url)
+        :param string query: The address or query you wish to geocode.
 
-        return self.parse_json(page, exactly_one)
+        :param bool exactly_one: Return one result or a list of results, if
+            available.
 
-    def parse_json(self, page, exactly_one=True):
-        """Parse a location name, latitude, and longitude from an JSON response."""
-        if not isinstance(page, basestring):
-            page = decode_page(page)
-        doc = json.loads(page)
+        :param user_location: Prioritize results closer to
+            this location.
+
+            .. versionadded:: 0.96
+
+        :type user_location: :class:`geopy.point.Point`
+
+        :param int timeout: Time, in seconds, to wait for the geocoding service
+            to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
+            exception. Set this only if you wish to override, on this call
+            only, the value set during the geocoder's initialization.
+
+            .. versionadded:: 0.97
+
+        :param string culture: Affects the language of the response,
+            must be a two-letter country code.
+
+            .. versionadded:: 1.4.0
+
+        :param boolean include_neighborhood: Sets whether to include the
+            neighborhood field in the response.
+
+            .. versionadded:: 1.4.0
+
+        :param boolean include_country_code: Sets whether to include the
+            two-letter ISO code of the country in the response (field name
+            'countryRegionIso2').
+
+            .. versionadded:: 1.4.0
+        """
+        params = {
+            'query': self.format_string % query,
+            'key': self.api_key
+        }
+        if user_location:
+            params['userLocation'] = ",".join(
+                (str(user_location.latitude), str(user_location.longitude))
+            )
+        if exactly_one is True:
+            params['maxResults'] = 1
+        if culture:
+            params['culture'] = culture
+        if include_neighborhood is not None:
+            params['includeNeighborhood'] = include_neighborhood
+        if include_country_code:
+            params['include'] = 'ciso2'  # the only acceptable value
+
+        url = "?".join((self.api, urlencode(params)))
+        logger.debug("%s.geocode: %s", self.__class__.__name__, url)
+        return self._parse_json(
+            self._call_geocoder(url, timeout=timeout),
+            exactly_one
+        )
+
+    def reverse(self, query, exactly_one=True, timeout=None):
+        """
+        Reverse geocode a point.
+
+        :param query: The coordinates for which you wish to obtain the
+            closest human-readable addresses.
+        :type query: :class:`geopy.point.Point`, list or tuple of (latitude,
+            longitude), or string as "%(latitude)s, %(longitude)s".
+
+        :param bool exactly_one: Return one result, or a list?
+
+        :param int timeout: Time, in seconds, to wait for the geocoding service
+            to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
+            exception. Set this only if you wish to override, on this call
+            only, the value set during the geocoder's initialization.
+
+            .. versionadded:: 0.97
+        """
+        point = self._coerce_point_to_string(query)
+        params = {'key': self.api_key}
+        url = "%s/%s?%s" % (
+            self.api, point, urlencode(params))
+
+        logger.debug("%s.reverse: %s", self.__class__.__name__, url)
+        return self._parse_json(
+            self._call_geocoder(url, timeout=timeout),
+            exactly_one
+        )
+
+    @staticmethod
+    def _parse_json(doc, exactly_one=True):  # pylint: disable=W0221
+        """
+        Parse a location name, latitude, and longitude from an JSON response.
+        """
+        status_code = doc.get("statusCode", 200)
+        if status_code != 200:
+            err = doc.get("errorDetails", "")
+            if status_code == 401:
+                raise GeocoderAuthenticationFailure(err)
+            elif status_code == 403:
+                raise GeocoderInsufficientPrivileges(err)
+            elif status_code == 429:
+                raise GeocoderQuotaExceeded(err)
+            elif status_code == 503:
+                raise GeocoderUnavailable(err)
+            else:
+                raise GeocoderServiceError(err)
+
         resources = doc['resourceSets'][0]['resources']
-
-        if exactly_one and len(resources) != 1:
-            raise ValueError("Didn't find exactly one resource! " \
-                             "(Found %d.)" % len(resources))
+        if resources is None or not len(resources): # pragma: no cover
+            return None
 
         def parse_resource(resource):
+            """
+            Parse each return object.
+            """
             stripchars = ", \n"
-            a = resource['address']
-            
-            address = a.get('addressLine', '').strip(stripchars)
-            city = a.get('locality', '').strip(stripchars)
-            state = a.get('adminDistrict', '').strip(stripchars)
-            zipcode = a.get('postalCode', '').strip(stripchars)
-            country = a.get('countryRegion', '').strip(stripchars)
-            
+            addr = resource['address']
+
+            address = addr.get('addressLine', '').strip(stripchars)
+            city = addr.get('locality', '').strip(stripchars)
+            state = addr.get('adminDistrict', '').strip(stripchars)
+            zipcode = addr.get('postalCode', '').strip(stripchars)
+            country = addr.get('countryRegion', '').strip(stripchars)
+
             city_state = join_filter(", ", [city, state])
             place = join_filter(" ", [city_state, zipcode])
             location = join_filter(", ", [address, place, country])
-            
+
             latitude = resource['point']['coordinates'][0] or None
             longitude = resource['point']['coordinates'][1] or None
             if latitude and longitude:
                 latitude = float(latitude)
                 longitude = float(longitude)
-            
-            return (location, (latitude, longitude))
+
+            return Location(location, (latitude, longitude), resource)
 
         if exactly_one:
             return parse_resource(resources[0])

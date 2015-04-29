@@ -1,5 +1,5 @@
 """
-:class:`GeoNames` geocoder.
+:class:`Yandex` geocoder.
 """
 
 from geopy.compat import urlencode
@@ -7,65 +7,54 @@ from geopy.compat import urlencode
 from geopy.geocoders.base import Geocoder, DEFAULT_TIMEOUT
 from geopy.location import Location
 from geopy.exc import (
-    GeocoderInsufficientPrivileges,
     GeocoderServiceError,
-    ConfigurationError
+    GeocoderParseError
 )
 from geopy.util import logger
 
 
-__all__ = ("GeoNames", )
+__all__ = ("Yandex", )
 
 
-class GeoNames(Geocoder): # pylint: disable=W0223
+class Yandex(Geocoder): # pylint: disable=W0223
     """
-    GeoNames geocoder, documentation at:
-        http://www.geonames.org/export/geonames-search.html
-
-    Reverse geocoding documentation at:
-        http://www.geonames.org/maps/us-reverse-geocoder.html
+    Yandex geocoder, documentation at:
+        http://api.yandex.com/maps/doc/geocoder/desc/concepts/input_params.xml
     """
 
     def __init__(
             self,
-            country_bias=None,
-            username=None,
+            api_key=None,
+            lang=None,
             timeout=DEFAULT_TIMEOUT,
             proxies=None
         ):
         """
-        :param string country_bias:
+        Create a Yandex-based geocoder.
 
-        :param string username:
+            .. versionadded:: 1.5.0
+
+        :param string api_key: Yandex API key (not obligatory)
+            http://api.yandex.ru/maps/form.xml
+
+        :param string lang: response locale, the following locales are
+            supported: "ru_RU" (default), "uk_UA", "be_BY", "en_US", "tr_TR"
 
         :param int timeout: Time, in seconds, to wait for the geocoding service
             to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
             exception.
 
-            .. versionadded:: 0.97
-
         :param dict proxies: If specified, routes this geocoder's requests
             through the specified proxy. E.g., {"https": "192.0.2.0"}. For
             more information, see documentation on
             :class:`urllib2.ProxyHandler`.
-
-            .. versionadded:: 0.96
         """
-        super(GeoNames, self).__init__(
+        super(Yandex, self).__init__(
             scheme='http', timeout=timeout, proxies=proxies
         )
-        if username == None:
-            raise ConfigurationError(
-                'No username given, required for api access.  If you do not '
-                'have a GeoNames username, sign up here: '
-                'http://www.geonames.org/login'
-            )
-        self.username = username
-        self.country_bias = country_bias
-        self.api = "%s://api.geonames.org/searchJSON" % self.scheme
-        self.api_reverse = (
-            "%s://api.geonames.org/findNearbyPlaceNameJSON" % self.scheme
-        )
+        self.api_key = api_key
+        self.lang = lang
+        self.api = 'http://geocode-maps.yandex.ru/1.x/'
 
     def geocode(self, query, exactly_one=True, timeout=None): # pylint: disable=W0221
         """
@@ -80,17 +69,17 @@ class GeoNames(Geocoder): # pylint: disable=W0223
             to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
             exception. Set this only if you wish to override, on this call
             only, the value set during the geocoder's initialization.
-
-            .. versionadded:: 0.97
         """
         params = {
-            'q': query,
-            'username': self.username
+            'geocode': query,
+            'format': 'json'
         }
-        if self.country_bias:
-            params['countryBias'] = self.country_bias
+        if not self.api_key is None:
+            params['key'] = self.api_key
+        if not self.lang is None:
+            params['lang'] = self.lang
         if exactly_one is True:
-            params['maxRows'] = 1
+            params['results'] = 1
         url = "?".join((self.api, urlencode(params)))
         logger.debug("%s.geocode: %s", self.__class__.__name__, url)
         return self._parse_json(
@@ -106,8 +95,6 @@ class GeoNames(Geocoder): # pylint: disable=W0223
         ):
         """
         Given a point, find an address.
-
-            .. versionadded:: 1.2.0
 
         :param string query: The coordinates for which you wish to obtain the
             closest human-readable addresses.
@@ -130,11 +117,14 @@ class GeoNames(Geocoder): # pylint: disable=W0223
         except ValueError:
             raise ValueError("Must be a coordinate pair or Point")
         params = {
-            'lat': lat,
-            'lng': lng,
-            'username': self.username
+            'geocode': '{0},{1}'.format(lng, lat),
+            'format': 'json'
         }
-        url = "?".join((self.api_reverse, urlencode(params)))
+        if self.api_key is not None:
+            params['key'] = self.api_key
+        if self.lang is not None:
+            params['lang'] = self.lang
+        url = "?".join((self.api, urlencode(params)))
         logger.debug("%s.reverse: %s", self.__class__.__name__, url)
         return self._parse_json(
             self._call_geocoder(url, timeout=timeout),
@@ -145,35 +135,28 @@ class GeoNames(Geocoder): # pylint: disable=W0223
         """
         Parse JSON response body.
         """
-        places = doc.get('geonames', [])
-        err = doc.get('status', None)
-        if err and 'message' in err:
-            if err['message'].startswith("user account not enabled to use"):
-                raise GeocoderInsufficientPrivileges(err['message'])
-            else:
-                raise GeocoderServiceError(err['message'])
-        if not len(places):
-            return None
+        if doc.get('error'):
+            raise GeocoderServiceError(doc['error']['message'])
+
+        try:
+            places = doc['response']['GeoObjectCollection']['featureMember']
+        except KeyError:
+            raise GeocoderParseError('Failed to parse server response')
 
         def parse_code(place):
             """
             Parse each record.
             """
-            latitude = place.get('lat', None)
-            longitude = place.get('lng', None)
-            if latitude and longitude:
-                latitude = float(latitude)
-                longitude = float(longitude)
-            else:
-                return None
+            try:
+                place = place['GeoObject']
+            except KeyError:
+                raise GeocoderParseError('Failed to parse server response')
 
-            placename = place.get('name')
-            state = place.get('adminCode1', None)
-            country = place.get('countryCode', None)
+            longitude, latitude = [
+                float(_) for _ in place['Point']['pos'].split(' ')
+            ]
 
-            location = ', '.join(
-                [x for x in [placename, state, country] if x]
-            )
+            location = place.get('description')
 
             return Location(location, (latitude, longitude), place)
 
