@@ -18,40 +18,10 @@ email                : info@itopen.it
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
-def name():
-    return "GeoCoding"
-
-def description():
-    return "GeoCoding and reverse GeoCoding using Google web services"
-
-def version():
-    return "2.5"
-
-def qgisMinimumVersion():
-    return "1.6"
 
 def classFactory(iface):
     # loads GeoCoding class from file GeoCoding
     from GeoCoding import GeoCoding
     return GeoCoding(iface)
 
-def author():
-    return "Alessandro Pasotti"
 
-def email():
-    return "apasotti@gmail.com"
-
-def experimental():
-    return False
-
-def homepage():
-    return 'http://www.itopen.it/2009/06/05/geocoding-qgis-plugins-released/'
-
-def repository():
-    return 'https://github.com/elpaso/qgis-geocoding'
-
-def tracker():
-    return 'https://github.com/elpaso/qgis-geocoding/issues'
-
-def icon():
-    return 'geocode_icon.png'

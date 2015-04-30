@@ -25,11 +25,6 @@ from qgis.core import *
 import sys, os
 from urllib2 import URLError
 
-
-# Make sure geopy is imported from current path
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-
-
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
@@ -37,6 +32,7 @@ from GeoCodingDialog import GeoCodingDialog
 from ConfigDialog import ConfigDialog
 from PlaceSelectionDialog import PlaceSelectionDialog
 from Utils import *
+
 
 class GeoCoding:
 
@@ -75,7 +71,7 @@ class GeoCoding:
 
     def unload(self):
         # Remove the plugin menu item and icon
-        self.iface.removePluginMenu("GeoCode",self.action)
+        self.iface.removePluginMenu("GeoCode", self.action)
         self.iface.removeToolBarIcon(self.action)
 
     # change settings
@@ -95,6 +91,7 @@ class GeoCoding:
         dlg.geocoderComboBox.setCurrentIndex(index)
         # show the dialog
         dlg.show()
+        dlg.adjustSize()
         result = dlg.exec_()
         # See if OK was pressed
         if result == 1:
@@ -157,11 +154,11 @@ class GeoCoding:
         try:
             geocoder = self.get_geocoder_instance()
         except ImportError, e:
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. You can install 'geopy' with the following command: 'sudo easy_install geopy'.<br>If you want to access reverse geocoding services, you will need the experimental version, more info at <a href=\"http://code.google.com/p/geopy/wiki/ReverseGeocoding\">ReverseGeocoding</a><br>Message: %s" % e))
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. You can install 'geopy' with the following command: 'sudo easy_install geopy'.<br>Message: %s" % e))
             return
 
         if 'reverse' not in dir(geocoder) :
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "This Python module 'geopy' version does not support reverse geocoding. You should install a newer version, more info at <a href=\"http://code.google.com/p/geopy/wiki/ReverseGeocoding\">ReverseGeocoding</a>"))
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "This Python module 'geopy' version does not support reverse geocoding. You should install a newer version."))
             return
 
         try:
@@ -195,11 +192,12 @@ class GeoCoding:
             geocoder = self.get_geocoder_instance()
         except ImportError, e:
             sys.path
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. You can install 'geopy' with the following command: 'sudo easy_install geopy'.<br>If you want to access reverse geocoding services, you will need the experimental version, more info at <a href=\"http://code.google.com/p/geopy/wiki/ReverseGeocoding\">ReverseGeocoding</a><br>Message: %s" % e))
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. You can install 'geopy' with the following command: 'sudo easy_install geopy'.<br>Message: %s" % e))
             return
         # create and show the dialog
         dlg = GeoCodingDialog()
         # show the dialog
+        dlg.adjustSize()
         dlg.show()
         result = dlg.exec_()
         # See if OK was pressed
@@ -241,13 +239,22 @@ class GeoCoding:
         """
         Loads a concrete Geocoder class
         """
-        from geopy import geocoders
 
         geocoder_class = str(self.get_config('GeocoderClass'))
 
         if not geocoder_class:
             geocoder_class  ='Nominatim'
-        geocoder = getattr(geocoders, geocoder_class)
+
+        try:
+            self.geocoders
+        except:
+            # Make sure geopy is imported from current path
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            from geopy import geocoders
+            self.geocoders = geocoders
+            del sys.path[0]
+
+        geocoder = getattr(self.geocoders, geocoder_class)
         return geocoder()
 
 

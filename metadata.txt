@@ -13,6 +13,7 @@ homepage:http://www.itopen.it/2009/06/05/geocoding-qgis-plugins-released/
 repository:https://github.com/elpaso/qgis-geocoding
 tracker:https://github.com/elpaso/qgis-geocoding/issues
 
+about:This plugin allows the user to search for an address and get its coordinates (geocoding) using GeoCoding using Nominatim and Google web services. It also allows to get the address of a point by clicking on the map canvas (reverse geocoding).
 
 changelog:
     Version 2.9:
