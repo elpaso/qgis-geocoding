@@ -157,6 +157,9 @@ class GeoCoding:
         """
         try:
             geocoder = self.get_geocoder_instance()
+        except AttributeError, e:
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy.geocoders' for communication with geocoders. The problem is most probably caused by other plugins shipping with obsolete geopy versions. Please try to uninstall all other Python plugins an retry.<br>Message: %s" % e))
+            return
         except ImportError, e:
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. Please report this error on the <a href=\"https://github.com/elpaso/qgis-geocoding/issues\">bug tracker</a>.<br>Message: %s" % e))
             return
@@ -194,8 +197,10 @@ class GeoCoding:
         #Import geopy
         try:
             geocoder = self.get_geocoder_instance()
+        except AttributeError, e:
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy.geocoders' for communication with geocoders. The problem is most probably caused by other plugins shipping with obsolete geopy versions. Please try to uninstall all other Python plugins an retry.<br>Message: %s" % e))
+            return
         except ImportError, e:
-            sys.path
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. Please report this error on the <a href=\"https://github.com/elpaso/qgis-geocoding/issues\">bug tracker</a>.<br>Message: %s" % e))
             return
         # create and show the dialog
@@ -252,6 +257,11 @@ class GeoCoding:
         try:
             self.geocoders
         except:
+            #Use pdb for debugging
+            #import pdb
+            # These lines allow you to set a breakpoint in the app
+            #pyqtRemoveInputHook()
+            #pdb.set_trace()
             from geopy import geocoders
             self.geocoders = geocoders
 
