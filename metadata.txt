@@ -5,7 +5,7 @@ description:GeoCoding and reverse GeoCoding using Nominatim and Google web servi
 email:apasotti@gmail.com
 author:Alessandro Pasotti
 
-version:2.10
+version:2.11
 qgisMinimumVersion:2.0
 
 experimental:False
