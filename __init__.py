@@ -4,7 +4,7 @@
 Name			 	 : Geocoding
 Description          : Geocoding and reverse Geocoding using Google
 Date                 : 28/May/09
-copyright            : (C) 2010 by ItOpen
+copyright            : (C) 2010-2015 by ItOpen
 email                : info@itopen.it
  ***************************************************************************/
 

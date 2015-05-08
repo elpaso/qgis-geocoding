@@ -42,6 +42,10 @@ class GeoCoding:
         self.canvas = iface.mapCanvas()
         # store layer id
         self.layerid = ''
+        libpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'libs')
+        if not libpath in sys.path:
+            # Make sure geopy is imported from current path
+            sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'libs'))
 
     def initGui(self):
         # Create action that will start plugin
@@ -154,7 +158,7 @@ class GeoCoding:
         try:
             geocoder = self.get_geocoder_instance()
         except ImportError, e:
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. You can install 'geopy' with the following command: 'sudo easy_install geopy'.<br>Message: %s" % e))
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. Please report this error on the <a href=\"https://github.com/elpaso/qgis-geocoding/issues\">bug tracker</a>.<br>Message: %s" % e))
             return
 
         if 'reverse' not in dir(geocoder) :
@@ -192,7 +196,7 @@ class GeoCoding:
             geocoder = self.get_geocoder_instance()
         except ImportError, e:
             sys.path
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. You can install 'geopy' with the following command: 'sudo easy_install geopy'.<br>Message: %s" % e))
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "Couldn't import Python module 'geopy' for communication with geocoders. Without it you won't be able to run GeoCoding plugin. Please report this error on the <a href=\"https://github.com/elpaso/qgis-geocoding/issues\">bug tracker</a>.<br>Message: %s" % e))
             return
         # create and show the dialog
         dlg = GeoCodingDialog()
@@ -248,11 +252,8 @@ class GeoCoding:
         try:
             self.geocoders
         except:
-            # Make sure geopy is imported from current path
-            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
             from geopy import geocoders
             self.geocoders = geocoders
-            del sys.path[0]
 
         geocoder = getattr(self.geocoders, geocoder_class)
         return geocoder()
