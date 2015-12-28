@@ -153,7 +153,7 @@ class GeoCoding:
         the geopy reverse method
 
         TODO: clear the map tool on error
-        (still haven't find how to do it)
+        (still haven't find how to do it) proxies="{'https':'http://172.20.0.252:3128','http':'http://172.20.0.252:3128'}"
         """
         try:
             geocoder = self.get_geocoder_instance()
@@ -195,6 +195,7 @@ class GeoCoding:
             return
 
         #Import geopy
+        geocoder = self.get_geocoder_instance()
         try:
             geocoder = self.get_geocoder_instance()
         except AttributeError, e:
@@ -264,8 +265,33 @@ class GeoCoding:
             #pdb.set_trace()
             from geopy import geocoders
             self.geocoders = geocoders
-
+        
+        #getting qgis proxy settings
+        s = QSettings()
+        proxyEnabled = s.value("proxy/proxyEnabled", "")
+        proxyType = s.value("proxy/proxyType", "" )
+        proxyHost = s.value("proxy/proxyHost", "" )
+        proxyPort = s.value("proxy/proxyPort", "" )
+        proxyUser = s.value("proxy/proxyUser", "" )
+        proxyPassword = s.value("proxy/proxyPassword", "" )
+        
+        #if possible build a connection dictionary for urlib request
+        if proxyEnabled and proxyType == "HttpProxy":
+            if proxyUser and proxyPassword:
+                proxyCredentials = proxyUser+":"+proxyPassword+"@"
+            else:
+                proxyCredentials = ""
+                
+            proxyConnection = {
+                'http':'http://%s%s:%s' % (proxyCredentials, proxyHost, proxyPort),
+                'https':'http://%s%s:%s' % (proxyCredentials, proxyHost, proxyPort)
+                }
+        else:
+            proxyConnection = {}
+            
         geocoder = getattr(self.geocoders, geocoder_class)
+        geocoder.proxies = proxyConnection
+        
         return geocoder()
 
 
