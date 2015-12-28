@@ -153,7 +153,7 @@ class GeoCoding:
         the geopy reverse method
 
         TODO: clear the map tool on error
-        (still haven't find how to do it) proxies="{'https':'http://172.20.0.252:3128','http':'http://172.20.0.252:3128'}"
+        (still haven't find how to do it)
         """
         try:
             geocoder = self.get_geocoder_instance()
