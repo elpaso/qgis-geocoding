@@ -264,8 +264,32 @@ class GeoCoding:
             #pdb.set_trace()
             from geopy import geocoders
             self.geocoders = geocoders
-
-        geocoder = getattr(self.geocoders, geocoder_class)
+        
+        #getting qgis proxy settings
+        s = QSettings()
+        proxyEnabled = s.value("proxy/proxyEnabled", "")
+        proxyType = s.value("proxy/proxyType", "" )
+        proxyHost = s.value("proxy/proxyHost", "" )
+        proxyPort = s.value("proxy/proxyPort", "" )
+        proxyUser = s.value("proxy/proxyUser", "" )
+        proxyPassword = s.value("proxy/proxyPassword", "" )
+        
+        #if possible build a connection dictionary for urlib request
+        if proxyEnabled and proxyType == "HttpProxy":
+            if proxyUser and proxyPassword:
+                proxyCredentials = proxyUser+":"+proxyPassword+"@"
+            else:
+                proxyCredentials = ""
+                
+            proxyConnection = {
+                'http':'http://%s%s:%s' % (proxyCredentials, proxyHost, proxyPort),
+                'https':'https://%s%s:%s' % (proxyCredentials, proxyHost, proxyPort)
+                }
+        else:
+            proxyConnection = {}
+        
+        geocoder = getattr(self.geocoders, geocoder_class, proxyConnection)
+        
         return geocoder()
 
 
