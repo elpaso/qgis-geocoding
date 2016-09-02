@@ -33,6 +33,8 @@ from ConfigDialog import ConfigDialog
 from PlaceSelectionDialog import PlaceSelectionDialog
 from Utils import *
 
+# constant to adjust the input scale parameter to display correct scale in qgis
+SCALE_FACTOR = 0.1082251082
 
 class GeoCoding:
 
@@ -288,9 +290,9 @@ class GeoCoding:
         else:
             proxyConnection = {}
         
-        geocoder = getattr(self.geocoders, geocoder_class, proxyConnection)
-        
-        return geocoder()
+        # init geocoder instance with proxy
+        geocoder = getattr(self.geocoders, geocoder_class)
+        return geocoder(proxies=proxyConnection)
 
 
     def process_point(self, place, point):
@@ -303,7 +305,10 @@ class GeoCoding:
         x = point[0]
         y = point[1]
         # stupid qvariant return a tuple
-        scale = float(self.get_config('ZoomScale', 0))
+        
+        # adjust scale to display correct scale in qgis
+        scale = float(self.get_config('ZoomScale', 0)) * SCALE_FACTOR
+        
         if not scale:
             scale = float(self.canvas.scale())
 
