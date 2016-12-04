@@ -33,9 +33,6 @@ from ConfigDialog import ConfigDialog
 from PlaceSelectionDialog import PlaceSelectionDialog
 from Utils import *
 
-# constant to adjust the input scale parameter to display correct scale in qgis
-SCALE_FACTOR = 0.1082251082
-
 class GeoCoding:
 
     def __init__(self, iface):
@@ -307,7 +304,7 @@ class GeoCoding:
         # stupid qvariant return a tuple
         
         # adjust scale to display correct scale in qgis
-        scale = float(self.get_config('ZoomScale', 0)) * SCALE_FACTOR
+        scale = float(self.get_config('ZoomScale', 0))
         
         if not scale:
             scale = float(self.canvas.scale())
@@ -320,6 +317,8 @@ class GeoCoding:
                         , y + scale)
         # Set the extent to our new rectangle
         self.canvas.setExtent(rect)
+        # Set the zoom scale
+        self.canvas.zoomScale(scale)
         # Refresh the map
         self.canvas.refresh()
         # save point
