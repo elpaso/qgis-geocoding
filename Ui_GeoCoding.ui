@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>100</width>
-    <height>30</height>
+    <width>646</width>
+    <height>150</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="addressLabel">
        <property name="text">
-        <string>Address</string>
+        <string>Find address</string>
        </property>
       </widget>
      </item>

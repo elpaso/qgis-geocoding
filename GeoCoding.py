@@ -80,7 +80,6 @@ class GeoCoding:
         self.iface.removePluginMenu("GeoCode", self.action)
         self.iface.removeToolBarIcon(self.action)
 
-    # change settings
     def config(self):
         # create and show the dialog
         dlg = ConfigDialog(self)
@@ -110,24 +109,23 @@ class GeoCoding:
         infoString = QCoreApplication.translate('GeoCoding', "Python GeoCoding Plugin<br>This plugin provides GeoCoding functions using webservices.<br>Author:  Alessandro Pasotti (aka: elpaso)<br>Mail: <a href=\"mailto:info@itopen.it\">info@itopen.it</a><br>Web: <a href=\"http://www.itopen.it\">www.itopen.it</a><br>" + "<b>Do yo like this plugin? Please consider <a href=\"https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TJHLD5DY4LAFQ\">donating</a></b>.")
         QMessageBox.information(self.iface.mainWindow(), "About GeoCoding", infoString)
 
-    # return a config parameter
     def get_config(self,  key, default=''):
+        # return a config parameter
         return self.config.value(key, default);
 
 
-   # set a config parameter
     def set_config(self,  key,  value):
+        # set a config parameter
         return self.config.setValue(key, value);
 
-    #read config from file
     def read_config(self):
+        #read config from file
         if not self.config.isWritable():
             infoString = unicode(QCoreApplication.translate('GeoCoding', "<strong>GeoCoding plugin</strong> cannot read config file (%s).<br>Please check your settings and file permissions.")) %  unicode(self.config.fileName())
             QMessageBox.information(self.iface.mainWindow(), "GeoCoding configuration",infoString)
 
-
-    # save to a file the config array
     def store_config(self):
+        # save to a file the config array
         if not self.config.isWritable():
             infoString = unicode(QCoreApplication.translate('GeoCoding', "<strong>GeoCoding plugin</strong> cannot write config file (%s).<br>Please check your settings and file permissions.")) %  unicode(self.config.fileName())
             QMessageBox.information(self.iface.mainWindow(), "GeoCoding configuration",infoString)
@@ -135,9 +133,8 @@ class GeoCoding:
         self.config.sync ()
         qDebug('geocoding config written on ' + self.config.fileName())
 
-
-    # Reverse geocoding
     def reverse(self):
+        # Reverse geocoding
         chk = self.check_settings()
         if len(chk) :
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), chk)
@@ -172,16 +169,16 @@ class GeoCoding:
 
         try:
             # reverse lat/lon
-            qDebug('Reverse clicked point ' + str(point[1])  + ' ' + str(point[0]))
+            qDebug('Reverse clicked point ' + str(point[1]) + ' ' + str(point[0]))
             pt = pointToWGS84(point, self.iface.mapCanvas().mapRenderer().destinationCrs())
-            qDebug('Reverse transformed point ' + str(pt[1])  + ' ' + str(pt[0]))
+            qDebug('Reverse transformed point ' + str(pt[1]) + ' ' + str(pt[0]))
             # Set exactly_one to False even if only the first is handled
             address = geocoder.reverse((pt[1],pt[0]), exactly_one=False);
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding"),  unicode(QCoreApplication.translate('GeoCoding', "Reverse geocoding found the following address:<br><strong>%s</strong>")) %  unicode(address[0][0]))
             # save point
             self.save_point(point, unicode(address[0][0]))
         except (IndexError,  ValueError, TypeError),  e:
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>No location found.</strong><br>Please check your CRS, you have clicked on<br>(Lat Lon) %(lat)f %(lon)f<br>Server response: %(error_message)s")) % {'lat' :  pt[1], 'lon' : pt[0], 'error_message' : e})
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>No location found.</strong><br>Please check your CRS, you have clicked on<br>(Lat Lon) %(lat)f %(lon)f<br>Server response: %(error_message)s")) % {'lat' :  pt[1], 'lon': pt[0], 'error_message' : e})
         except URLError, e:
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>GeoCoding server is unreachable</strong>.<br>Please check your network connection.")))
         except Exception, e:
@@ -189,8 +186,8 @@ class GeoCoding:
         return
 
 
-    # run geocoding
     def geocode(self):
+        # run geocoding
         chk = self.check_settings()
         if len(chk) :
             QMessageBox.information(self.iface.mainWindow(),QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), chk)
@@ -254,19 +251,14 @@ class GeoCoding:
         geocoder_class = str(self.get_config('GeocoderClass'))
 
         if not geocoder_class:
-            geocoder_class  ='Nominatim'
+            geocoder_class ='Nominatim'
 
         try:
             self.geocoders
         except:
-            #Use pdb for debugging
-            #import pdb
-            # These lines allow you to set a breakpoint in the app
-            #pyqtRemoveInputHook()
-            #pdb.set_trace()
             from geopy import geocoders
             self.geocoders = geocoders
-        
+
         #getting qgis proxy settings
         s = QSettings()
         proxyEnabled = s.value("proxy/proxyEnabled", "")
@@ -275,21 +267,21 @@ class GeoCoding:
         proxyPort = s.value("proxy/proxyPort", "" )
         proxyUser = s.value("proxy/proxyUser", "" )
         proxyPassword = s.value("proxy/proxyPassword", "" )
-        
+
         #if possible build a connection dictionary for urlib request
         if proxyEnabled and proxyType == "HttpProxy":
             if proxyUser and proxyPassword:
-                proxyCredentials = proxyUser+":"+proxyPassword+"@"
+                proxyCredentials = proxyUser + ":" + proxyPassword + "@"
             else:
                 proxyCredentials = ""
-                
+
             proxyConnection = {
                 'http':'http://%s%s:%s' % (proxyCredentials, proxyHost, proxyPort),
                 'https':'https://%s%s:%s' % (proxyCredentials, proxyHost, proxyPort)
                 }
         else:
             proxyConnection = {}
-        
+
         # init geocoder instance with proxy
         geocoder = getattr(self.geocoders, geocoder_class)
         return geocoder(proxies=proxyConnection)
@@ -302,28 +294,18 @@ class GeoCoding:
         # lon lat and transform
         point = QgsPoint(point[1], point[0])
         point = pointFromWGS84(point, self.iface.mapCanvas().mapRenderer().destinationCrs())
-        x = point[0]
-        y = point[1]
-        # stupid qvariant return a tuple
-        
-        # adjust scale to display correct scale in qgis
-        scale = float(self.get_config('ZoomScale', 0)) * SCALE_FACTOR
-        
-        if not scale:
-            scale = float(self.canvas.scale())
 
-        # Create a rectangle to cover the new extent
-        rect = QgsRectangle(  \
-                        x - scale \
-                        , y - scale \
-                        , x + scale \
-                        , y + scale)
         # Set the extent to our new rectangle
-        self.canvas.setExtent(rect)
+        self.canvas.setCenter(point)
+
+        scale = float(self.get_config('ZoomScale', 0))
+        # adjust scale to display correct scale in qgis
+        if scale:
+            self.canvas.zoomScale(scale)
+
         # Refresh the map
         self.canvas.refresh()
         # save point
-        #self.save_point(point, unicode(dlg.address.text()))
         self.save_point(point, unicode(place))
 
 
@@ -359,13 +341,7 @@ class GeoCoding:
         # add a feature
         fields=self.layer.pendingFields()
         fet = QgsFeature(fields)
-        ####fet.initFields(fields)
         fet.setGeometry(QgsGeometry.fromPoint(point))
-        # Use pdb for debugging
-        #import pdb
-        ## These lines allow you to set a breakpoint in the app
-        #pyqtRemoveInputHook()
-        #pdb.set_trace()
 
         try: # QGIS < 1.9
             fet.setAttributeMap({0 : address})
@@ -395,4 +371,3 @@ class GeoCoding:
 
 if __name__ == "__main__":
     pass
-

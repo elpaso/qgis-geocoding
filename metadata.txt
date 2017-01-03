@@ -5,8 +5,8 @@ description:GeoCoding and reverse GeoCoding using Nominatim and Google web servi
 email:apasotti@gmail.com
 author:Alessandro Pasotti
 
-version:2.11
-qgisMinimumVersion:2.0
+version:2.13
+qgisMinimumVersion:2.14
 
 experimental:False
 homepage:http://www.itopen.it/2009/06/05/geocoding-qgis-plugins-released/
@@ -16,7 +16,12 @@ tracker:https://github.com/elpaso/qgis-geocoding/issues
 about:This plugin allows the user to search for an address and get its coordinates (geocoding) using GeoCoding using Nominatim and Google web services. It also allows to get the address of a point by clicking on the map canvas (reverse geocoding).
 
 changelog:
+    Version 2.13:
+        Better handling of zoomScale + minor tweaks to the GUI
+    Version 2.12:
+        Use proxy configuration
     Version 2.11:
+        Moved geopy under libs due to import problems
         Moved geopy under libs due to import problems
     Version 2.10:
         Fix fixed error messages and iface error on upgrade
@@ -34,4 +39,3 @@ changelog:
         Nominatim (openstreetmap) webservice support
 
 icon:geocode_icon.png
-
