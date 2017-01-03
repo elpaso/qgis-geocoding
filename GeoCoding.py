@@ -52,16 +52,16 @@ class GeoCoding:
         self.action = QAction(QIcon(":/plugins/GeoCoding/geocode_icon.png"), \
         "&GeoCode", self.iface.mainWindow())
         # connect the action to the run method
-        QObject.connect(self.action, SIGNAL("activated()"), self.geocode)
+        QObject.connect(self.action, SIGNAL("triggered()"), self.geocode)
 
         # Add toolbar button and menu item
 
         self.reverseAction=QAction(QIcon(":/plugins/GeoCoding/reverse_icon.png"), QCoreApplication.translate('GeoCoding', "&Reverse GeoCode"), self.iface.mainWindow())
         self.configAction=QAction(QIcon(":/plugins/GeoCoding/settings_icon.png"), QCoreApplication.translate('GeoCoding', "&Settings"), self.iface.mainWindow())
         self.aboutAction=QAction(QIcon(":/plugins/GeoCoding/about_icon.png"), QCoreApplication.translate('GeoCoding', "&About"), self.iface.mainWindow())
-        QObject.connect(self.configAction, SIGNAL("activated()"), self.config)
-        QObject.connect(self.reverseAction, SIGNAL("activated()"), self.reverse)
-        QObject.connect(self.aboutAction, SIGNAL("activated()"), self.about)
+        QObject.connect(self.configAction, SIGNAL("triggered()"), self.config)
+        QObject.connect(self.reverseAction, SIGNAL("triggered()"), self.reverse)
+        QObject.connect(self.aboutAction, SIGNAL("triggered()"), self.about)
 
 
         self.iface.addToolBarIcon(self.action)
