@@ -33,8 +33,6 @@ from ConfigDialog import ConfigDialog
 from PlaceSelectionDialog import PlaceSelectionDialog
 from Utils import *
 
-# constant to adjust the input scale parameter to display correct scale in qgis
-SCALE_FACTOR = 0.1082251082
 
 class GeoCoding:
 
