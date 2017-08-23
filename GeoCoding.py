@@ -90,7 +90,6 @@ class GeoCoding:
         self.iface.removePluginMenu("GeoCoding", self.configAction)
         self.iface.removePluginMenu("GeoCoding", self.aboutAction)
         self.iface.removeToolBarIcon(self.action)
-        self.iface.pluginMenu().removeMenu( self.menu )
         if self.previous_map_tool:
             self.iface.mapCanvas().setMapTool(self.previous_map_tool)
 
