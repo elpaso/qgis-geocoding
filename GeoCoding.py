@@ -4,7 +4,7 @@
 Name                 : Geocoding
 Description          : Geocoding and reverse Geocoding using Web Services
 Date                 : 25/Jun/2013
-copyright            : (C) 2009-2013 by ItOpen
+copyright            : (C) 2009-2017 by ItOpen
 email                : info@itopen.it
  ***************************************************************************/
 
@@ -17,16 +17,26 @@ email                : info@itopen.it
  *                                                                         *
  ***************************************************************************/
 """
-# Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from qgis.core import *
-
 import sys, os
+
+
+# Import the PyQt and QGIS libraries
+try:
+    from qgis.core import Qgis
+    from PyQt5.QtCore import *
+    from PyQt5.QtGui import *
+    from PyQt5.QtWidgets import *
+    from PyQt5 import uic
+    QT_VERSION=5
+    os.environ['QT_API'] = 'pyqt5'
+except:
+    from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
+    from PyQt4 import uic
+    QT_VERSION=4
+
 from urllib2 import URLError
 
-# Initialize Qt resources from file resources.py
-import resources
 # Import the code for the dialog
 from GeoCodingDialog import GeoCodingDialog
 from ConfigDialog import ConfigDialog
@@ -49,34 +59,40 @@ class GeoCoding:
 
     def initGui(self):
         # Create action that will start plugin
-        self.action = QAction(QIcon(":/plugins/GeoCoding/geocode_icon.png"), \
-        "&GeoCode", self.iface.mainWindow())
+        current_directory = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        self.action = QAction(QIcon(os.path.join(current_directory, "geocode_icon.png")), \
+        "&GeoCoding", self.iface.mainWindow())
         # connect the action to the run method
         QObject.connect(self.action, SIGNAL("triggered()"), self.geocode)
 
         # Add toolbar button and menu item
-
-        self.reverseAction=QAction(QIcon(":/plugins/GeoCoding/reverse_icon.png"), QCoreApplication.translate('GeoCoding', "&Reverse GeoCode"), self.iface.mainWindow())
-        self.configAction=QAction(QIcon(":/plugins/GeoCoding/settings_icon.png"), QCoreApplication.translate('GeoCoding', "&Settings"), self.iface.mainWindow())
-        self.aboutAction=QAction(QIcon(":/plugins/GeoCoding/about_icon.png"), QCoreApplication.translate('GeoCoding', "&About"), self.iface.mainWindow())
+        self.reverseAction=QAction(QIcon(os.path.join(current_directory, "reverse_icon.png")), QCoreApplication.translate('GeoCoding', "&Reverse GeoCoding"), self.iface.mainWindow())
+        self.configAction=QAction(QIcon(os.path.join(current_directory, "settings_icon.png")), QCoreApplication.translate('GeoCoding', "&Settings"), self.iface.mainWindow())
+        self.aboutAction=QAction(QIcon(os.path.join(current_directory, "about_icon.png")), QCoreApplication.translate('GeoCoding', "&About"), self.iface.mainWindow())
         QObject.connect(self.configAction, SIGNAL("triggered()"), self.config)
         QObject.connect(self.reverseAction, SIGNAL("triggered()"), self.reverse)
         QObject.connect(self.aboutAction, SIGNAL("triggered()"), self.about)
 
-
+        self.menu = QMenu(QCoreApplication.translate('GeoCoding', "GeoCoding"))
+        self.menu.setIcon(QIcon(os.path.join(current_directory, "geocode_icon.png")))
+        self.menu.addActions([self.action, self.reverseAction, self.configAction, self.aboutAction])
+        self.iface.pluginMenu().addMenu( self.menu )
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu("GeoCode", self.action)
-        self.iface.addPluginToMenu("GeoCode", self.reverseAction)
-        self.iface.addPluginToMenu("GeoCode", self.configAction)
-        self.iface.addPluginToMenu("GeoCode", self.aboutAction)
         # read config
         self.config = QSettings('ItOpen', 'GeoCoding');
+        self.previous_map_tool = self.iface.mapCanvas().mapTool()
 
 
     def unload(self):
         # Remove the plugin menu item and icon
-        self.iface.removePluginMenu("GeoCode", self.action)
+        self.iface.removePluginMenu("GeoCoding", self.action)
+        self.iface.removePluginMenu("GeoCoding", self.reverseAction)
+        self.iface.removePluginMenu("GeoCoding", self.configAction)
+        self.iface.removePluginMenu("GeoCoding", self.aboutAction)
         self.iface.removeToolBarIcon(self.action)
+        self.iface.pluginMenu().removeMenu( self.menu )
+        if self.previous_map_tool:
+            self.iface.mapCanvas().setMapTool(self.previous_map_tool)
 
     def config(self):
         # create and show the dialog
@@ -140,6 +156,7 @@ class GeoCoding:
         sb = self.iface.mainWindow().statusBar()
         sb.showMessage(QCoreApplication.translate('GeoCoding', "Click on the map to obtain the address"))
         ct = ClickTool(self.iface,  self.reverse_action);
+        self.previous_map_tool = self.iface.mapCanvas().mapTool()
         self.iface.mapCanvas().setMapTool(ct)
 
 
@@ -186,6 +203,8 @@ class GeoCoding:
 
     def geocode(self):
         # run geocoding
+        if self.previous_map_tool:
+            self.iface.mapCanvas().setMapTool(self.previous_map_tool)
         chk = self.check_settings()
         if len(chk) :
             QMessageBox.information(self.iface.mainWindow(),QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), chk)
@@ -324,16 +343,17 @@ class GeoCoding:
             self.layer.updateFields()
 
             # Labels on
-            label = self.layer.label()
-            label.setLabelField(QgsLabel.Text, 0)
-            self.layer.enableLabels(True)
-
+            self.layer.setCustomProperty("labeling", "pal")
+            self.layer.setCustomProperty("labeling/enabled", "true")
+            #self.layer.setCustomProperty("labeling/fontFamily", "Arial")
+            #self.layer.setCustomProperty("labeling/fontSize", "10")
+            self.layer.setCustomProperty("labeling/fieldName", "address")
+            self.layer.setCustomProperty("labeling/placement", "2")
             # add layer if not already
             QgsMapLayerRegistry.instance().addMapLayer(self.layer)
 
             # store layer id
             self.layerid = self.layer.id()
-
 
 
         # add a feature

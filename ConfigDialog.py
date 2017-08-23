@@ -16,19 +16,30 @@ email                : info@itopen.it
  *                                                                         *
  ***************************************************************************/
 """
+import os
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+# Import the PyQt and QGIS libraries
+try:
+    from qgis.core import Qgis
+    from PyQt5.QtCore import *
+    from PyQt5.QtGui import *
+    from PyQt5.QtWidgets import *
+    from PyQt5 import uic
+    QT_VERSION=5
+    os.environ['QT_API'] = 'pyqt5'
+except:
+    from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
+    from PyQt4 import uic
+    QT_VERSION=4
 
-from Ui_Config import Ui_Config
+
 # create the dialog for Config
-class ConfigDialog(QDialog, Ui_Config ):
+class ConfigDialog(QDialog ):
+
     def __init__(self, caller):
-        QDialog.__init__(self)
-        ##Set up the user interface from Designer.
-        ##self.ui = Ui_Config ()
-        ##self.ui.setupUi(self)
-        self.setupUi(self)
+        super(ConfigDialog, self ).__init__()
+        uic.loadUi(os.path.join(os.path.dirname(__file__), 'Ui_Config.ui'), self)
 
         # stupid qvariant return a tuple...
         zoom_scale = caller.get_config('ZoomScale', 0)

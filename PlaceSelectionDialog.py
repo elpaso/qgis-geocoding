@@ -16,13 +16,28 @@ email                : info@itopen.it
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4 import QtCore, QtGui
-from Ui_PlaceSelection import Ui_PlaceSelectionDialog
+
+
+import os
+
+# Import the PyQt and QGIS libraries
+try:
+    from qgis.core import Qgis
+    from PyQt5.QtCore import *
+    from PyQt5.QtGui import *
+    from PyQt5.QtWidgets import *
+    from PyQt5 import uic
+    QT_VERSION=5
+    os.environ['QT_API'] = 'pyqt5'
+except:
+    from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
+    from PyQt4 import uic
+    QT_VERSION=4
+
 # create the dialog for GeoCoding
-class PlaceSelectionDialog(QtGui.QDialog, Ui_PlaceSelectionDialog):
+class PlaceSelectionDialog(QDialog):
+
   def __init__(self):
-    QtGui.QDialog.__init__(self)
-    # Set up the user interface from Designer.
-    # #self.ui = Ui_GeoCoding ()
-    # #self.ui.setupUi(self)
-    self.setupUi(self)
+    super(PlaceSelectionDialog, self).__init__()
+    uic.loadUi(os.path.join(os.path.dirname(__file__), 'Ui_PlaceSelection.ui'), self)
