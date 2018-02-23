@@ -50,5 +50,6 @@ class ConfigDialog(QDialog ):
         #pdb.set_trace()
 
         self.ZoomScale.setValue(int(zoom_scale))
+        self.debugCheckBox.setChecked(caller.get_config('writeDebug', '') == True)
 
 

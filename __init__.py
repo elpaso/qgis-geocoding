@@ -21,7 +21,7 @@ email                : info@itopen.it
 
 def classFactory(iface):
     # loads GeoCoding class from file GeoCoding
-    from GeoCoding import GeoCoding
+    from .GeoCoding import GeoCoding
     return GeoCoding(iface)
 
 
