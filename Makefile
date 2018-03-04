@@ -15,7 +15,7 @@ clean:
 	rm -f ../GeoCoding.zip
 
 package:
-	cd .. && find GeoCoding/  -print|grep -v Make | grep -v zip | grep -v .git | grep -v .pyc| zip GeoCoding.zip -@
+	cd .. && find GeoCoding/  -print|grep -v Make | grep -v zip | grep -v __ | grep -v .git | grep -v .pyc| zip GeoCoding.zip -@
 
 localrepo:
 	cp ../GeoCoding.zip ~/public_html/qgis/GeoCoding.zip

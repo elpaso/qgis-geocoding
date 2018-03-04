@@ -38,7 +38,9 @@ class OsmGeoCoder():
 
     def geocode(self, address):
         try: 
-            results = json.loads(NAM.request(self.url.format(**{'address': address}), blocking=True)[1].decode('utf8'))
+            url = self.url.format(**{'address': address.decode('utf8')})
+            logMessage(url)
+            results = json.loads(NAM.request(url, blocking=True)[1].decode('utf8'))
             return [(rec['display_name'], (rec['lon'], rec['lat'])) for rec in results]
         except Exception as e:
             raise GeoCodeException(str(e))
@@ -46,7 +48,9 @@ class OsmGeoCoder():
     def reverse(self, lon, lat):
         """single result"""
         try: 
-            rec = json.loads(NAM.request(self.reverse_url.format(**{'lon': lon, 'lat': lat}), blocking=True)[1].decode('utf8'))
+            url = self.reverse_url.format(**{'lon': lon, 'lat': lat})
+            logMessage(url)
+            rec = json.loads(NAM.request(url, blocking=True)[1].decode('utf8'))
             return [(rec['display_name'], (rec['lon'], rec['lat']))]
         except Exception as e:
             raise GeoCodeException(str(e))
@@ -67,7 +71,7 @@ class GoogleGeoCoder():
             url = self.url
 
         try: 
-            url = url.format(**{'address': address})
+            url = url.format(**{'address': address.decode('utf8')})
             logMessage(url)
             results = json.loads(NAM.request(url, blocking=True)[1].decode('utf8'))['results']
             return [(rec['formatted_address'], (rec['geometry']['location']['lng'], rec['geometry']['location']['lat'])) for rec in results]

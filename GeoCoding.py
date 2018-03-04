@@ -263,13 +263,10 @@ class GeoCoding:
         Transforms the point and save
         """
         # lon lat and transform
-        point = QgsPoint(point[0], point[1])
-        try:
-            point = pointFromWGS84(point, self._get_layer_crs())
-        except:
-            point = pointFromWGS84(point, self._get_layer_crs())
-
-        # Set the extent to our new rectangle
+        point = QgsPoint(float(point[0]), float(point[1]))
+        point = pointFromWGS84(point, self._get_layer_crs())
+        
+        # Set the extent to our new point
         self.canvas.setCenter(point)
 
         scale = float(self.get_config('ZoomScale', 0))
