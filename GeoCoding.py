@@ -18,6 +18,7 @@ email                : info@itopen.it
  ***************************************************************************/
 """
 import sys, os
+import inspect
 
 
 # Import the PyQt and QGIS libraries
