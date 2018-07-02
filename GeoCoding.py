@@ -65,7 +65,7 @@ class GeoCoding:
 
     def initGui(self):
         # Create action that will start plugin
-        current_directory = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        current_directory = os.path.dirname(os.path.abspath(__file__))
         self.action = QAction(QIcon(os.path.join(current_directory, "geocode_icon.png")), \
         "&GeoCoding", self.iface.mainWindow())
         # connect the action to the run method
