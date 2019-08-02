@@ -64,14 +64,14 @@ class GoogleGeoCoder():
         self.api_key = api_key
 
     def geocode(self, address):
+        try:
+            url = self.url.format(**{'address': address.decode('utf8')})
 
-        if self.api_key is not None and self.api_key.replace(' ', '') != '':
-            url += self.url + '&key=' + self.api_key
-        else:
-            url = self.url
+            if self.api_key is not None and self.api_key.replace(' ', '') != '':
+                url += self.url + '&key=' + self.api_key
+            else:
+                url = self.url
 
-        try: 
-            url = url.format(**{'address': address.decode('utf8')})
             logMessage(url)
             results = json.loads(NAM.request(url, blocking=True)[1].decode('utf8'))['results']
             return [(rec['formatted_address'], (rec['geometry']['location']['lng'], rec['geometry']['location']['lat'])) for rec in results]
