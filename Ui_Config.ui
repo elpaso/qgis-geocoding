@@ -86,6 +86,20 @@
      </item>
     </layout>
    </item>
+      <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>TomTom API Key (optional)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="tomtomKey"/>
+     </item>
+    </layout>
+   </item>
    <item>
     <widget class="QCheckBox" name="debugCheckBox">
      <property name="text">

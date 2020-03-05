@@ -113,6 +113,7 @@ class GeoCoding:
         geocoders = {
                 'Nominatim (Openstreetmap)' : 'Nominatim',
                 'Google' : 'GoogleV3',
+                'TomTom': 'TomTom',
             }
         # Get current index
         try:
@@ -132,6 +133,7 @@ class GeoCoding:
             self.set_config('ZoomScale',  dlg.ZoomScale.text())
             self.set_config('writeDebug',  dlg.debugCheckBox.isChecked())
             self.set_config('googleKey',  dlg.googleKey.text())
+            self.set_config('tomtomKey', dlg.tomtomKey.text())
 
     def about(self):
         infoString = QCoreApplication.translate('GeoCoding', "Python GeoCoding Plugin<br>This plugin provides GeoCoding functions using webservices.<br>Author:  Alessandro Pasotti (aka: elpaso)<br>Mail: <a href=\"mailto:info@itopen.it\">info@itopen.it</a><br>Web: <a href=\"http://www.itopen.it\">www.itopen.it</a><br>" + "<b>Do yo like this plugin? Please consider <a href=\"https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TJHLD5DY4LAFQ\">donating</a></b>.")
@@ -253,8 +255,10 @@ class GeoCoding:
 
         if geocoder_class == 'Nominatim':
             return OsmGeoCoder()
-        else:
+        elif geocoder_class == 'GoogleV3':
             return GoogleGeoCoder(self.get_config('googleKey'))
+        else:
+            return TomTomGeoCoder(self.get_config('tomtomKey'))
 
 
 

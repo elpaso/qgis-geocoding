@@ -62,11 +62,12 @@ class GoogleGeoCoder():
 
     def __init__(self, api_key=None):
         self.api_key = api_key
+        url = self.url
 
     def geocode(self, address):
 
         if self.api_key is not None and self.api_key.replace(' ', '') != '':
-            url += self.url + '&key=' + self.api_key
+            url = self.url + '&key=' + self.api_key
         else:
             url = self.url
 
@@ -88,6 +89,43 @@ class GoogleGeoCoder():
             logMessage(url)
             results = json.loads(NAM.request(url, blocking=True)[1].decode('utf8'))['results']
             return [(rec['formatted_address'], (rec['geometry']['location']['lng'], rec['geometry']['location']['lat'])) for rec in results]
+        except Exception as e:
+            raise GeoCodeException(str(e))
+
+class TomTomGeoCoder():
+
+    url = 'https://api.tomtom.com/search/2/geocode/{address}.json?'
+    reverse_url = 'https://api.tomtom.com/search/2/reverseGeocode/{lat},{lon}.json?'
+
+    def __init__(self, tomtomKey=None):
+        self.api_key = tomtomKey
+        url = self.url
+
+    def geocode(self, address):
+
+        if self.api_key is not None and self.api_key.replace(' ', '') != '':
+            url = self.url + '&key=' + self.api_key
+        else:
+            url = self.url
+
+        try:
+            url = url.format(**{'address': address.decode('utf8')})
+            logMessage(url)
+            results = json.loads(NAM.request(url, blocking=True)[1].decode('utf8'))['results']
+            return [(rec['address']['freeformAddress'] + ' (' + rec['type'] + ')', (rec['position']['lon'], rec['position']['lat'])) for rec in results]
+        except Exception as e:
+            raise GeoCodeException(str(e))
+
+    def reverse(self, lon, lat):
+        if self.api_key is not None and self.api_key.replace(' ', '') != '':
+            url = self.reverse_url + '&key=' + self.api_key
+        else:
+            url = self.reverse_url
+        try:
+            url = url.format(**{'lon': lon, 'lat': lat})
+            logMessage(url)
+            results = json.loads(NAM.request(url, blocking=True)[1].decode('utf8'))['addresses']
+            return [(rec['address']['freeformAddress'], (rec['position'])) for rec in results]
         except Exception as e:
             raise GeoCodeException(str(e))
 
