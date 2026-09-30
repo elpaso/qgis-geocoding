@@ -54,7 +54,7 @@ class OsmGeoCoder(BaseGeocoder):
 
     def geocode(self, address):
         try:
-            url = self.url.format(**{'address': address.decode('utf8')})
+            url = self.url.format(**{'address': address})
             results = json.loads(self.get(url))
             return [(rec['display_name'], (rec['lon'], rec['lat'])) for rec in results]
         except Exception as e:
@@ -85,7 +85,7 @@ class GoogleGeoCoder(BaseGeocoder):
             url = self.url
 
         try:
-            url = url.format(**{'address': address.decode('utf8')})
+            url = url.format(**{'address': address})
             results = json.loads(self.get(url))
             if "error_message" in results:
                 raise GeoCodeException(results["error_message"])

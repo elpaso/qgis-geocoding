@@ -162,13 +162,13 @@ class GeoCoding:
             address = geocoder.reverse(pt[0],pt[1])
             self.logMessage(str(address))
             if len(address) == 0:
-                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>Empty result</strong>.<br>")))
+                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), (QCoreApplication.translate('GeoCoding', "<strong>Empty result</strong>.<br>")))
             else:
-                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding"),  unicode(QCoreApplication.translate('GeoCoding', "Reverse geocoding found the following address:<br><strong>%s</strong>")) %  address[0][0])
+                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding"),  (QCoreApplication.translate('GeoCoding', "Reverse geocoding found the following address:<br><strong>%s</strong>")) %  address[0][0])
                 # save point
                 self.save_point(point, address[0][0])
         except Exception as e:
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), unicode(QCoreApplication.translate('GeoCoding', "<strong>Unhandled exception</strong>.<br>%s" % e)))
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "Reverse GeoCoding error"), (QCoreApplication.translate('GeoCoding', "<strong>Unhandled exception</strong>.<br>%s" % e)))
         return
 
 
@@ -188,7 +188,7 @@ class GeoCoding:
         # See if OK was pressed
         if result == 1 :
             try:
-                result = geocoder.geocode(unicode(dlg.address.text()).encode('utf-8'))
+                result = geocoder.geocode(dlg.address.text())
             except Exception as e:
                 QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('GeoCoding', "GeoCoding plugin error"), QCoreApplication.translate('GeoCoding', "There was an error with the geocoding service:<br><strong>%s</strong>" % e))
                 return
@@ -215,7 +215,7 @@ class GeoCoding:
                         for place in places:
                             self.process_point(place, places[place])
                     else:
-                        point = places[unicode(place_dlg.placesComboBox.currentText())]
+                        point = places[place_dlg.placesComboBox.currentText()]
                         self.process_point(place_dlg.placesComboBox.currentText(), point)
             return
 
@@ -242,7 +242,7 @@ class GeoCoding:
         Transforms the point and save
         """
         # lon lat and transform
-        point = QgsPoint(float(point[0]), float(point[1]))
+        point = QgsPointXY(float(point[0]), float(point[1]))
         point = pointFromWGS84(point, self._get_layer_crs())
 
         # Set the extent to our new point
@@ -256,7 +256,7 @@ class GeoCoding:
         # Refresh the map
         self.canvas.refresh()
         # save point
-        self.save_point(point, unicode(place))
+        self.save_point(point, str(place))
 
     def _get_layer_crs(self):
         """get CRS from destination layer or from canvas if the layer does not exist"""
@@ -275,10 +275,7 @@ class GeoCoding:
 
     def _get_registry(self):
         """compat"""
-        try:
-            return QgsMapLayerRegistry.instance()
-        except:
-            return QgsProject.instance()
+        return QgsProject.instance()
 
     # save point to file, point is in project's crs
     def save_point(self, point, address):
@@ -318,16 +315,10 @@ class GeoCoding:
 
 
         # add a feature
-        try:
-            fields=self.layer.pendingFields()
-        except:
-            fields=self.layer.fields()
+        fields=self.layer.fields()
 
         fet = QgsFeature(fields)
-        try:
-            fet.setGeometry(QgsGeometry.fromPoint(point))
-        except:
-            fet.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(point)))
+        fet.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(point)))
 
         try: # QGIS < 1.9
             fet.setAttributeMap({0 : address})

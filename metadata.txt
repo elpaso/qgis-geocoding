@@ -8,6 +8,7 @@ author:Alessandro Pasotti
 version:2.20
 qgisMinimumVersion:3.0
 qgisMaximumVersion=4.99
+supportsQt6=True
 
 experimental:False
 homepage:http://www.itopen.it/2009/06/05/geocoding-qgis-plugins-released/
